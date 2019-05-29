@@ -1,9 +1,15 @@
 var express = require("express");
 var router = express.Router();
 
-/* GET users listing. */
-router.get("/api", function(req, res, next) {
-  res.json({ message: "API" });
-});
+// Contacts
+const contactsController = require('../controllers/contacts');
+
+/* GET contacts listing. */
+router
+.get("/contacts", contactsController.getAllContacts)
+.get("/contacts/:id", contactsController.getContact)
+.post("/contacts", contactsController.createContact)
+.put("/contacts/:id", contactsController.updateContact)
+.delete("/contacts/:id", contactsController.deleteContact)
 
 module.exports = router;
