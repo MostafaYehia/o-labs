@@ -1,24 +1,33 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var cors = require('cors')
-var logger = require('morgan');
+let createError = require("http-errors");
+let express = require("express");
+let path = require("path");
+let cookieParser = require("cookie-parser");
+let cors = require("cors");
+let logger = require("morgan");
+let mongoose = require("mongoose");
+let config = require("config");
 
-var apiRouter = require('./routes/api');
-var authRouter = require('./routes/auth');
+let apiRouter = require("./routes/api");
+let authRouter = require("./routes/auth");
 
-var app = express();
+let app = express();
 
-app.use(logger('dev'));
+startDB();
+
+if (config.util.getEnv("NODE_ENV") !== "test") {
+  //use morgan to log at command line
+  app.use(logger("dev"));
+}
+
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use('/api', apiRouter);
-app.use('/auth', authRouter);
+app.use("/api", apiRouter);
+app.use("/auth", authRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -29,11 +38,21 @@ app.use(function(req, res, next) {
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  res.locals.error = req.app.get("env") === "development" ? err : {};
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.render("error");
 });
+
+function startDB() {
+  let options = {
+    server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
+    replset: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
+  };
+
+
+  mongoose.connect(config.DBHost, options);
+}
 
 module.exports = app;

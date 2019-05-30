@@ -1,0 +1,10 @@
+{
+    "User": {
+      "dbConfig": {
+        "host": "localhost",
+        "port": 27017,
+        "dbName": "o-labs-test"
+      }
+    }
+  }
+  
