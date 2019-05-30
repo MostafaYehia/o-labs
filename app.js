@@ -1,3 +1,5 @@
+process.env.NODE_ENV = "test";
+
 let createError = require("http-errors");
 let express = require("express");
 let path = require("path");
@@ -18,7 +20,6 @@ if (config.util.getEnv("NODE_ENV") !== "test") {
   //use morgan to log at command line
   app.use(logger("dev"));
 }
-
 
 app.use(cors());
 app.use(express.json());
@@ -45,14 +46,17 @@ app.use(function(err, req, res, next) {
   res.render("error");
 });
 
-function startDB() {
-  let options = {
-    server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
-    replset: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
-  };
+async function startDB() {
+  const { host, port, dbName } = config.User.dbConfig;
 
-
-  mongoose.connect(config.DBHost, options);
+  try {
+    await mongoose.connect(`${host}:${port}/${dbName}`, {
+      useNewUrlParser: true
+    });
+    console.log("Connected to mongodb successfully!");
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 module.exports = app;

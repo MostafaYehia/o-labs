@@ -1,7 +1,7 @@
 {
     "User": {
       "dbConfig": {
-        "host": "localhost",
+        "host": "mongodb://localhost",
         "port": 27017,
         "dbName": "o-labs-test"
       }

@@ -1,16 +1,15 @@
-let mongoose = require("mongoose");
-let Schema = mongoose.Schema;
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+const bcrypt = require("bcrypt");
+const contactSchema = require("./contact");
+const saltRounds = 10;
 
 //User schema definition
 let UserSchema = new Schema(
   {
-    firstName: {
+    username: {
       type: String,
-      required: [true, "you should enter your first name"]
-    },
-    lastName: {
-      type: String,
-      required: [true, "you should enter your last name"]
+      required: [true, "you should enter a username"]
     },
     email: {
       type: String,
@@ -22,6 +21,16 @@ let UserSchema = new Schema(
       },
       required: [true, "you should enter your email"]
     },
+    password: {
+      type: String,
+      trim: true,
+      required: true
+    },
+    contacts: [contactSchema],
+    isVerified: {
+      type: Boolean,
+      default: false
+    },
     createdAt: { type: Date, default: Date.now }
   },
   {
@@ -29,10 +38,31 @@ let UserSchema = new Schema(
   }
 );
 
+// Check user password on authentication
+UserSchema.methods.checkPassword = password => {
+  return bcrypt.compareSync(password, this.password);
+};
+
+// Genrate JWT
+UserSchema.methods.generateToken = password => {
+  return jwt.sign(
+    { id: this._id, username: this.username, verified: this.isVerified },
+    "blackswan",
+    {
+      expiresIn: "1h"
+    }
+  );
+};
+
 // Sets the createdAt parameter equal to the current time
 UserSchema.pre("save", next => {
+  // Hash user's passowrd
+  this.password = bcrypt.hashSync(this.password, saltRounds);
+
+  // Set creation date
   now = new Date();
   if (!this.createdAt) this.createdAt = now;
+
   next();
 });
 
