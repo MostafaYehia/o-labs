@@ -5,7 +5,7 @@ module.exports = {
       script: "./bin/www",
       watch: true,
       env: {
-        NODE_ENV: "development"
+        NODE_ENV: "test"
       },
       env_production: {
         NODE_ENV: "production"

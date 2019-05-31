@@ -9,6 +9,7 @@ router
 .post("/login", authController.login)
 .post("/signup", authController.signup)
 .get("/check", authController.checkAuth)
+.post("/activation/resend", authController.sendVerification)
 .get("/verify", authController.verifyEmail)
 
 module.exports = router;

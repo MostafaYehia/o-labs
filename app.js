@@ -1,18 +1,19 @@
-process.env.NODE_ENV = "test";
+const createError = require("http-errors");
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const logger = require("morgan");
+const mongoose = require("mongoose");
+const config = require("config");
 
-let createError = require("http-errors");
-let express = require("express");
-let path = require("path");
-let cookieParser = require("cookie-parser");
-let cors = require("cors");
-let logger = require("morgan");
-let mongoose = require("mongoose");
-let config = require("config");
+const apiRouter = require("./routes/api");
+const authRouter = require("./routes/auth");
 
-let apiRouter = require("./routes/api");
-let authRouter = require("./routes/auth");
+// Just for email testing purpose
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-let app = express();
+const app = express();
 
 startDB();
 
@@ -43,7 +44,6 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render("error");
 });
 
 async function startDB() {
