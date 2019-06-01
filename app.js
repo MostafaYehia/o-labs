@@ -10,6 +10,8 @@ const config = require("config");
 const apiRouter = require("./routes/api");
 const authRouter = require("./routes/auth");
 
+const authController = require("./controllers/auth");
+
 // Just for email testing purpose
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -28,9 +30,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/api", apiRouter);
 app.use("/auth", authRouter);
 
+app.use("/api", authController.isAuthenticated, apiRouter);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

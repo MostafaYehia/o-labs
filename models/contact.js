@@ -1,5 +1,6 @@
 let mongoose = require("mongoose");
 let Schema = mongoose.Schema;
+let mongooseIntlPhoneNumber = require("mongoose-intl-phone-number");
 
 //Contact schema definition
 let ContactSchema = new Schema(
@@ -12,26 +13,19 @@ let ContactSchema = new Schema(
       type: String,
       required: [true, "you should enter your last name"]
     },
-    email: {
-      type: String,
-      validate: {
-        validator: function(v) {
-          return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/.test(v);
-        },
-        message: props => `${props.value} is not a valid email!`
-      },
-      max: [30, "No more than 30 number"],
-      required: [true, "you should enter your email"]
-    },
     phone: {
       type: String,
       validate: {
         validator: function(v) {
-          return /\d{3}-\d{4}-\d{4}/.test(v);
+          return /\d{11}/.test(v);
         },
         message: props => `${props.value} is not a valid phone number!`
       },
       required: [true, "you should enter your phone number"]
+    },
+    creator: {
+      type: Schema.Types.ObjectId,
+      required: [true, "you should provide the current user id"]
     },
     createdAt: { type: Date, default: Date.now }
   },
@@ -47,4 +41,19 @@ ContactSchema.pre("save", next => {
   next();
 });
 
-module.exports = ContactSchema
+// Run validation on update
+ContactSchema.pre('findOneAndUpdate', function(next) {
+  this.options.runValidators = true;
+  next();
+});
+
+// Plugins
+ContactSchema.plugin(mongooseIntlPhoneNumber, {
+  hook: "validate",
+  phoneNumberField: "phone",
+  nationalFormatField: "nationalFormat",
+  internationalFormat: "internationalFormat",
+  countryCodeField: "countryCode"
+});
+
+module.exports = mongoose.model("Contact", ContactSchema);

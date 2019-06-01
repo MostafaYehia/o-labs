@@ -19,9 +19,9 @@ exports.sendVerificationEmail = (token, user) => {
       });
       // send mail with defined transport object
       let info = await transporter.sendMail({
-        from: '"Mostafa Yehia" <mostafayehia@o-labs.com>', // sender address
+        from: '"o-labs" <mostafayehia@o-labs.com>', // sender address
         to: user.email, // list of receivers
-        subject: `o-labs verification`, // Subject line
+        subject: `Account Activation`, // Subject line
         html: `
         <h1>Hello, ${user.username}</h1>
         <p>Welcome to o-labs, to activate your account click on this link below</p>
