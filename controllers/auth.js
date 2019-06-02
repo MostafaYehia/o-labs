@@ -6,6 +6,7 @@ const emailController = require("../controllers/email");
 exports.signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+
     const exist = await userController.findUser(email);
 
     if (exist)

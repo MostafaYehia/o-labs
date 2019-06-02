@@ -1,10 +1,7 @@
 {
-    "User": {
-      "dbConfig": {
-        "host": "mongodb://localhost",
-        "port": 27017,
-        "dbName": "o-labs-test"
-      }
-    }
+  "DB": {
+    "host": "mongodb://localhost",
+    "port": 27017,
+    "dbName": "o-labs-test"
   }
-  
+}

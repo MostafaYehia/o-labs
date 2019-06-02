@@ -23,6 +23,10 @@ let ContactSchema = new Schema(
       },
       required: [true, "you should enter your phone number"]
     },
+    avatar: {
+      type: String,
+      default: "uploads/imgs/avatars/default.jpg"
+    },
     creator: {
       type: Schema.Types.ObjectId,
       required: [true, "you should provide the current user id"]
@@ -42,7 +46,7 @@ ContactSchema.pre("save", next => {
 });
 
 // Run validation on update
-ContactSchema.pre('findOneAndUpdate', function(next) {
+ContactSchema.pre("findOneAndUpdate", function(next) {
   this.options.runValidators = true;
   next();
 });

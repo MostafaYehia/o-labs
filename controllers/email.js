@@ -11,10 +11,13 @@ exports.sendVerificationEmail = (token, user) => {
 
       // create reusable transporter object using the default SMTP transport
       let transporter = nodemailer.createTransport({
-        service: 'Gmail',
+        service: "Gmail",
         auth: {
-            user: 'nodeapi.test.email@gmail.com',
-            pass: 'testemailpassword'
+          user: "nodeapi.test.email@gmail.com",
+          pass: "testemailpassword"
+        },
+        tls: {
+          rejectUnauthorized: false
         }
       });
       // send mail with defined transport object

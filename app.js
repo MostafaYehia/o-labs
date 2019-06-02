@@ -7,17 +7,19 @@ const logger = require("morgan");
 const mongoose = require("mongoose");
 const config = require("config");
 
+// load enviroment variables from .env file
+require("dotenv").config();
+
 const apiRouter = require("./routes/api");
 const authRouter = require("./routes/auth");
 
 const authController = require("./controllers/auth");
 
-// Just for email testing purpose
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 const app = express();
 
+// Start database
 startDB();
+
 
 if (config.util.getEnv("NODE_ENV") !== "test") {
   //use morgan to log at command line
@@ -29,6 +31,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "uploads")));
 
 app.use("/auth", authRouter);
 
@@ -49,7 +52,7 @@ app.use(function(err, req, res, next) {
 });
 
 async function startDB() {
-  const { host, port, dbName } = config.User.dbConfig;
+  const { host, port, dbName } = config.DB;
 
   try {
     await mongoose.connect(`${host}:${port}/${dbName}`, {
