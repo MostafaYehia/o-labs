@@ -6,7 +6,6 @@ exports.configFileStorage = (fieldName, folderPath, fileTypes) => {
       cb(null, folderPath);
     },
     filename: function(req, file, cb) {
-      console.log("File is: ", file);
       const ext = file.mimetype.split("/")[1];
       cb(null, `${Date.now()}.${ext}`);
     }
@@ -28,11 +27,11 @@ exports.configFileStorage = (fieldName, folderPath, fileTypes) => {
 exports.errorHandler = uploader => {
   return (req, res, next) => {
     uploader(req, res, err => {
-      let message = err.message || err;
+      let message = err ? err.message || err : null;
 
       if (message == "File too large") message = "Maximum size is 2Mb";
 
-      if (err) {
+      if (message) {
         return res.status(415).json({ message });
       }
       next();

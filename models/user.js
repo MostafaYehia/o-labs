@@ -27,12 +27,6 @@ let UserSchema = new Schema(
       trim: true,
       required: true
     },
-    contacts: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Contact"
-      }
-    ],
     isVerified: {
       type: Boolean,
       default: false

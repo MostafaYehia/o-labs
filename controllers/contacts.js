@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const ContactModel = require("../models/contact");
 const UserModel = require("../models/user");
+const imagesController = require("../controllers/images");
 
 exports.getAllContacts = async (req, res) => {
   try {
@@ -21,7 +22,7 @@ exports.createContact = async (req, res) => {
     const { userId, file } = req;
 
     const { firstName, lastName, phone } = req.body;
-    const contactaInfo = {
+    let contactInfo = {
       firstName,
       lastName,
       phone,
@@ -30,15 +31,14 @@ exports.createContact = async (req, res) => {
 
     // Set the uploaded file as avatar or keep the default avatar
     if (file) {
-      contactaInfo["avatar"] = file.path;
+      contactInfo["avatars"] = {};
+      contactInfo["avatars"] = await this.setAvatars(contactInfo, file);
     }
-
-    const contact = new ContactModel(contactaInfo);
+    // Resize avatar for medium size version
+    let contact = new ContactModel(contactInfo);
     await contact.save();
 
-    const user = await UserModel.findById(userId);
-    user.contacts.push(userId);
-    await user.save();
+    contact;
     res.status(200).json({ contact });
   } catch (error) {
     res.status(500).json({ message: error.message || error });
@@ -67,15 +67,18 @@ exports.updateContact = async (req, res) => {
     const validId = mongoose.Types.ObjectId.isValid(id);
 
     if (validId) {
-      const contactInfo = { ...req.body };
+      let contactInfo = { ...req.body };
       if (file) {
-        contactInfo["avatar"] = file.path;
+        contactInfo["avatars"] = {};
+        contactInfo = this.setAvatars(contactInfo, file);
       }
       const updatedContact = await ContactModel.findOneAndUpdate(
         id,
         { ...contactInfo },
         { new: true, runValidators: true, useFindAndModify: false }
-      ).select("_id avatar firstName lastName phone").exec();
+      )
+        .select("_id avatar firstName lastName phone")
+        .exec();
       return res.status(200).json({ contact: updatedContact });
     } else {
       throw new Error("Invalid id");
@@ -96,13 +99,6 @@ exports.deleteContact = async (req, res) => {
       await ContactModel.findByIdAndDelete({ _id: id }).orFail(
         new Error("No contact found")
       );
-
-      const user = await UserModel.findById(userId);
-
-      const idx = user.contacts.indexOf(id);
-      user.contacts.splice(idx, 1);
-      await user.save();
-
       res
         .status(200)
         .json({ message: "Contact has been deleted successfully!" });
@@ -112,4 +108,23 @@ exports.deleteContact = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+exports.setAvatars = (doc, file) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const mediumSizePath = await imagesController.resize(
+        file.path,
+        "medium",
+        100
+      );
+      const smallSizePath = await imagesController.resize(file.path, "small", 50);
+      doc["avatars"].default = file.path;
+      doc["avatars"].medium = mediumSizePath;
+      doc["avatars"].small = smallSizePath;
+      return resolve(doc["avatars"]);
+    } catch (error) {
+      reject(error)
+    }
+  })
 };

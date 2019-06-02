@@ -23,9 +23,19 @@ let ContactSchema = new Schema(
       },
       required: [true, "you should enter your phone number"]
     },
-    avatar: {
-      type: String,
-      default: "uploads/imgs/avatars/default.jpg"
+    avatars: {
+      medium: {
+        type: String,
+        default: "uploads/imgs/avatars/default-medium.jpg"
+      },
+      small: {
+        type: String,
+        default: "uploads/imgs/avatars/default-small.jpg"
+      },
+      default: {
+        type: String,
+        default: "uploads/imgs/avatars/default-small.jpg"
+      }
     },
     creator: {
       type: Schema.Types.ObjectId,
