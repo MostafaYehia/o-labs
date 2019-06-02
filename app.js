@@ -20,7 +20,6 @@ const app = express();
 // Start database
 startDB();
 
-
 if (config.util.getEnv("NODE_ENV") !== "test") {
   //use morgan to log at command line
   app.use(logger("dev"));
@@ -31,7 +30,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
-app.use(express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/auth", authRouter);
 

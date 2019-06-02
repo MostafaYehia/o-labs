@@ -73,9 +73,9 @@ exports.updateContact = async (req, res) => {
       }
       const updatedContact = await ContactModel.findOneAndUpdate(
         id,
-        { ...req.body },
+        { ...contactInfo },
         { new: true, runValidators: true, useFindAndModify: false }
-      ).select("_id avatar firstName lastName phone");
+      ).select("_id avatar firstName lastName phone").exec();
       return res.status(200).json({ contact: updatedContact });
     } else {
       throw new Error("Invalid id");
