@@ -23,11 +23,12 @@ exports.getAllContacts = async (req, res) => {
 exports.createContact = async (req, res) => {
   try {
     const { userId } = req;
-    const { firstName, lastName, phone } = req.body;
+    const { firstName, lastName, phone, email } = req.body;
     let contactInfo = {
       firstName,
       lastName,
       phone,
+      email,
       creator: userId
     };
 
@@ -72,7 +73,7 @@ exports.updateContact = async (req, res) => {
         { ...contactInfo },
         { new: true, runValidators: true, useFindAndModify: false }
       )
-        .select("_id avatars firstName lastName phone")
+        .select("_id avatars firstName lastName phone email")
         .exec();
       return res.status(200).json({ contact: updatedContact });
     } else {
@@ -100,7 +101,6 @@ exports.deleteContact = async (req, res) => {
 
       if (userAvatar != originalAvatar) {
         const deleted = await fs.unlink(userAvatar);
-        console.log("file has been deleted: ", deleted);
       }
 
       res

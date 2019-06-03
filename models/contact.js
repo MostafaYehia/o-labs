@@ -26,6 +26,16 @@ let ContactSchema = new Schema(
       },
       required: [true, "you should enter your phone number"]
     },
+    email: {
+      type: String,
+      validate: {
+        validator: function(v) {
+          return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/.test(v);
+        },
+        message: props => `${props.value} is not a valid email!`
+      },
+      required: [true, "you should enter your email"]
+    },
     avatars: {
       original: {
         type: String,

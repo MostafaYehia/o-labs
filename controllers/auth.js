@@ -5,9 +5,8 @@ const emailController = require("../controllers/email");
 
 exports.signup = async (req, res) => {
   try {
-
     const regExp = `	
-    (?=^.{6,10}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&amp;*()_+}{&quot;:;'?/&gt;.&lt;,])(?!.*\s).*$`
+    (?=^.{6,10}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&amp;*()_+}{&quot;:;'?/&gt;.&lt;,])(?!.*\s).*$`;
     const { username, email, password } = req.body;
 
     const exist = await userController.findUser(email);
@@ -95,13 +94,14 @@ exports.verifyEmail = async (req, res) => {
 
 exports.isAuthenticated = (req, res, next) => {
   const brearer = req.get("Authorization");
-  const token = req.query.token || req.body.token || brearer ? brearer.split(" ")[1]: null;
+  const token =
+    req.query.token || req.body.token || brearer ? brearer.split(" ")[1] : null;
   if (!token) return res.status(401).json({ message: "Unauthorized" });
   jwt.verify(token, "blackswan", (err, payload) => {
     if (err) return res.status(401).json({ error: "Unauthorized" });
 
     req.userId = payload.id;
-    next()
+    next();
   });
 };
 
