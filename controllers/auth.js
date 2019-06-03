@@ -5,6 +5,9 @@ const emailController = require("../controllers/email");
 
 exports.signup = async (req, res) => {
   try {
+
+    const regExp = `	
+    (?=^.{6,10}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&amp;*()_+}{&quot;:;'?/&gt;.&lt;,])(?!.*\s).*$`
     const { username, email, password } = req.body;
 
     const exist = await userController.findUser(email);

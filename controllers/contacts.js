@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
 const ContactModel = require("../models/contact");
-const UserModel = require("../models/user");
 const imagesController = require("../controllers/images");
+const fs = require("fs").promises;
+const path = require("path");
+
+const baseaPath = path.join(__dirname, "..", "uploads/imgs/avatars");
 
 exports.getAllContacts = async (req, res) => {
   try {
@@ -19,8 +22,7 @@ exports.getAllContacts = async (req, res) => {
 
 exports.createContact = async (req, res) => {
   try {
-    const { userId, file } = req;
-
+    const { userId } = req;
     const { firstName, lastName, phone } = req.body;
     let contactInfo = {
       firstName,
@@ -29,16 +31,9 @@ exports.createContact = async (req, res) => {
       creator: userId
     };
 
-    // Set the uploaded file as avatar or keep the default avatar
-    if (file) {
-      contactInfo["avatars"] = {};
-      contactInfo["avatars"] = await this.setAvatars(contactInfo, file);
-    }
     // Resize avatar for medium size version
-    let contact = new ContactModel(contactInfo);
+    const contact = new ContactModel(contactInfo);
     await contact.save();
-
-    contact;
     res.status(200).json({ contact });
   } catch (error) {
     res.status(500).json({ message: error.message || error });
@@ -67,17 +62,17 @@ exports.updateContact = async (req, res) => {
     const validId = mongoose.Types.ObjectId.isValid(id);
 
     if (validId) {
-      let contactInfo = { ...req.body };
+      let contactInfo = { ...req.body, id };
       if (file) {
         contactInfo["avatars"] = {};
-        contactInfo = this.setAvatars(contactInfo, file);
+        contactInfo = await setAvatars(contactInfo, file);
       }
       const updatedContact = await ContactModel.findOneAndUpdate(
         id,
         { ...contactInfo },
         { new: true, runValidators: true, useFindAndModify: false }
       )
-        .select("_id avatar firstName lastName phone")
+        .select("_id avatars firstName lastName phone")
         .exec();
       return res.status(200).json({ contact: updatedContact });
     } else {
@@ -91,14 +86,23 @@ exports.updateContact = async (req, res) => {
 exports.deleteContact = async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId } = req;
 
     const validId = mongoose.Types.ObjectId.isValid(id);
     // Delete
     if (validId) {
-      await ContactModel.findByIdAndDelete({ _id: id }).orFail(
-        new Error("No contact found")
-      );
+      const removedContact = await ContactModel.findByIdAndDelete({
+        _id: id
+      }).orFail(new Error("No contact found"));
+
+      const originalAvatar =
+        "uploads/imgs/avatars/1559520000-o-labs-avatar.png";
+      const userAvatar = removedContact.avatars.original;
+
+      if (userAvatar != originalAvatar) {
+        const deleted = await fs.unlink(userAvatar);
+        console.log("file has been deleted: ", deleted);
+      }
+
       res
         .status(200)
         .json({ message: "Contact has been deleted successfully!" });
@@ -110,21 +114,31 @@ exports.deleteContact = async (req, res) => {
   }
 };
 
-exports.setAvatars = (doc, file) => {
+function setAvatars(doc, file) {
   return new Promise(async (resolve, reject) => {
+    const sizes = [
+      {
+        type: "medium",
+        width: 100
+      },
+      {
+        type: "small",
+        width: 50
+      }
+    ];
     try {
-      const mediumSizePath = await imagesController.resize(
-        file.path,
-        "medium",
-        100
-      );
-      const smallSizePath = await imagesController.resize(file.path, "small", 50);
-      doc["avatars"].default = file.path;
-      doc["avatars"].medium = mediumSizePath;
-      doc["avatars"].small = smallSizePath;
-      return resolve(doc["avatars"]);
+      doc["avatars"].original = file.path;
+      for (const size of sizes) {
+        doc["avatars"][size.type] = await imagesController.resize(
+          doc.id,
+          file.path,
+          size.width,
+          size.type
+        );
+      }
+      return resolve(doc);
     } catch (error) {
-      reject(error)
+      reject(error);
     }
-  })
-};
+  });
+}

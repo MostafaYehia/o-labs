@@ -15,11 +15,7 @@ let uploader = uploadsController.configFileStorage(
 /* GET contacts listing. */
 router
   .get("/contacts", contactsController.getAllContacts)
-  .post(
-    "/contacts",
-    uploadsController.errorHandler(uploader),
-    contactsController.createContact
-  )
+  .post("/contacts", contactsController.createContact)
   .get("/contacts/:id", contactsController.getContact)
   .put(
     "/contacts/:id",
