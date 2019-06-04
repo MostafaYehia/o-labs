@@ -1,4 +1,4 @@
-process.emit.NODE_ENV = "test";
+require('./auth.spec')
 
 const chai = require("chai");
 const chaiHttp = require("chai-http");
@@ -7,16 +7,18 @@ const app = require("../app");
 const contactModel = require("../models/contact");
 const expect = chai.expect;
 const should = chai.should();
+const authTestData = require("./factories/auth");
 chai.use(chaiHttp);
 
 const userCredentials = {
-  email: "mostafayehia212@gmail.com",
-  password: "123456789"
+  email: authTestData.validUser().email,
+  password: authTestData.validUser().password
 };
+
 let token = "";
 let createdContactId = "";
 
-describe("Contacts", () => {
+describe("@Contacts", () => {
   // Drop contacts collection in the test database before testing
   before(function(done) {
     /**
@@ -29,12 +31,11 @@ describe("Contacts", () => {
       .end(function(err, res) {
         res.should.have.status(200);
         token = `bearer ${res.body.token}`;
-        console.log("token", token);
         done();
       });
   });
 
-  it("should list ALL contacts on /contacts GET and respond'contacts' array", done => {
+  it("should list ALL contacts on /contacts GET and respond with 'contacts' array", done => {
     chai
       .request(app)
       .get("/api/contacts")
@@ -44,7 +45,6 @@ describe("Contacts", () => {
         res.should.be.json;
         res.body.should.have.property("contacts");
         res.body.contacts.should.be.a("array");
-        console.log("Test response body: ", res.body);
 
         done();
       });
@@ -81,7 +81,7 @@ describe("Contacts", () => {
   it("should list a SINGLE contact on /contact/<id> GET with [avatars/firstName/lastName/phone/email]", done => {
     chai
       .request(app)
-      .get("/api/contacts/5cf5374b37491519184aeb4b")
+      .get(`/api/contacts/${createdContactId}`)
       .set("Authorization", token)
       .end((err, res) => {
         res.should.have.status(200);
@@ -96,7 +96,7 @@ describe("Contacts", () => {
         done();
       });
   });
-  
+
   it("should update a SINGLE contact on /contact/<id> PUT, update email", done => {
     const newContact = {
       firstName: "Khaled",

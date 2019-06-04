@@ -5,16 +5,19 @@ const emailController = require("../controllers/email");
 
 exports.signup = async (req, res) => {
   try {
-    const regExp = `	
-    (?=^.{6,10}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&amp;*()_+}{&quot;:;'?/&gt;.&lt;,])(?!.*\s).*$`;
+    const regExp = /(?=^.{8,}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&amp;*()_+}{&quot;:;'?/&gt;.&lt;,])(?!.*\s).*$/;
     const { username, email, password } = req.body;
+    if (!regExp.test(password))
+      return res.status(422).json({
+        message: `password should be a mix of (Uppercase,Lowercase,Number and special characters) with 8 char min`
+      });
 
     const exist = await userController.findUser(email);
 
     if (exist)
       return res
         .status(409)
-        .json({ error: "This email has been already used" });
+        .json({ message: "This email has been already used" });
 
     const newUser = new userModel({ username, email, password });
     await newUser.save();
@@ -39,12 +42,12 @@ exports.login = async (req, res) => {
     const user = await userController.findUser(email);
 
     if (!user)
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid email or password" });
 
     const validPassoword = await user.checkPassword(password);
 
     if (!validPassoword)
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid email or password" });
 
     const token = user.generateToken();
     res.status(200).json({ token });
