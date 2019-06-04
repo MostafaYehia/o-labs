@@ -1,4 +1,3 @@
-// require("./auth.spec");
 const fs = require("fs");
 const chai = require("chai");
 const chaiHttp = require("chai-http");
@@ -12,6 +11,8 @@ const contactsTestData = require("./factories/contacts");
 const path = require("path");
 
 let avatarPath = path.join(__dirname, "images/avatar-test.png");
+let largeAvatarPath = path.join(__dirname, "images/large-avatar-test.jpg");
+let invalidAvatarTypePath = path.join(__dirname, "images/avatar.txt");
 let uplaodedAvatarExtension = "";
 let uploadedAvatarBasePath = path.join(__dirname, "../uploads/imgs/avatars");
 
@@ -44,7 +45,7 @@ describe("@Contacts", () => {
   it("should list ALL contacts on /contacts GET and respond with 'contacts' array", done => {
     chai
       .request(app)
-      .get("/api/contacts")
+      .get("/api/contacts?page=3")
       .set("Authorization", token)
       .end((err, res) => {
         res.should.have.status(200);
@@ -52,6 +53,44 @@ describe("@Contacts", () => {
         res.body.should.have.property("contacts");
         res.body.contacts.should.be.a("array");
 
+        done();
+      });
+  });
+
+  it("should get paginated list of contacts on /contacts?page=2 GET and respond with 10 'contacts' array", done => {
+    chai
+      .request(app)
+      .get("/api/contacts?page=2")
+      .set("Authorization", token)
+      .end((err, res) => {
+        res.should.have.status(200);
+        res.should.be.json;
+        res.body.should.have.property("contacts");
+        res.body.contacts.should.be.a("array");
+        const contacts = res.body.contacts;
+        expect(contacts).to.have.length(0, 10);
+        done();
+      });
+  });
+
+  it("should get alphabetically sorted list of contacts on /contacts?page=1&sortBy=firstName GET", done => {
+    chai
+      .request(app)
+      .get("/api/contacts?page=2&sortBy=firstName")
+      .set("Authorization", token)
+      .end((err, res) => {
+        res.should.have.status(200);
+        res.should.be.json;
+        res.body.should.have.property("contacts");
+        res.body.contacts.should.be.a("array");
+        const firstContact = res.body.contacts[0].firstName;
+
+        console.log("firstContact", firstContact)
+        const firstChar = firstContact
+          .split(" ")[0]
+          .split("")[0]
+          .toLowerCase();
+        expect(firstChar).to.equal("a");
         done();
       });
   });
@@ -109,6 +148,40 @@ describe("@Contacts", () => {
         res.body.should.have.property("contact");
         const updatedEmail = res.body.contact.email;
         expect(updatedEmail).to.equal("updated@gmail.com");
+        done();
+      });
+  });
+
+  it("Contact avatar max file size is 5Mb", done => {
+    chai
+      .request(app)
+      .put(`/api/contacts/${createdContactId}`)
+      .set("Authorization", token)
+      .attach("avatar", fs.readFileSync(largeAvatarPath), "avatar-test.png")
+      .end((err, res) => {
+        res.should.have.status(415);
+        res.should.be.json;
+        res.body.should.have.property("message");
+        const message = res.body.message;
+        expect(message).to.equal("Maximum size is 5Mb");
+        done();
+      });
+  });
+
+  it("Contact avatar should be JPG,PNG", done => {
+    chai
+      .request(app)
+      .put(`/api/contacts/${createdContactId}`)
+      .set("Authorization", token)
+      .attach("avatar", fs.readFileSync(invalidAvatarTypePath), "avatar.txt")
+      .end((err, res) => {
+        res.should.have.status(415);
+        res.should.be.json;
+        res.body.should.have.property("message");
+        const message = res.body.message;
+        expect(message).to.equal(
+          "Invalid file type only, JPG and PNG are supported)"
+        );
         done();
       });
   });
@@ -175,7 +248,7 @@ describe("@Contacts", () => {
 
   it("Delete avatar after deleting contact", done => {
     fs.access(
-      `${uploadedAvatarBasePath}/${createdContactId}.${uplaodedAvatarExtension}`,
+      `${uploadedAvatarBasePath}/\/${createdContactId}.${uplaodedAvatarExtension}`,
       fs.F_OK,
       err => {
         if (err) {

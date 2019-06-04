@@ -83,4 +83,19 @@ ContactSchema.plugin(mongooseIntlPhoneNumber, {
   countryCodeField: "countryCode"
 });
 
+// Static methods
+ContactSchema.statics.paginatedContacts = function(userId, page) {
+  return this.model("Contact")
+    .find(
+      { creator: userId },
+      "-countryCode -nationalFormat -internationalFormat -creator"
+    )
+    .skip((page - 1) * 10)
+    .limit(10);
+};
+
+ContactSchema.statics.sortBy = function(paginatedDocsPromise, sortType) {
+  return paginatedDocsPromise.sort({ sortType: 1 });
+};
+
 module.exports = mongoose.model("Contact", ContactSchema);

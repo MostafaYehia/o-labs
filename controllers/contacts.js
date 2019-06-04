@@ -6,15 +6,26 @@ const path = require("path");
 
 const baseaPath = path.join(__dirname, "..", "uploads/imgs/avatars");
 
-exports.getAllContacts = async (req, res) => {
+exports.getPaginatedContacts = async (req, res) => {
   try {
     // Get all contacts
     const { userId } = req;
-    const contacts = await ContactModel.find(
-      { creator: userId },
-      "-countryCode -nationalFormat -internationalFormat -creator"
-    );
-    res.status(200).json({ contacts });
+    const { page, sortBy } = req.query;
+
+    if (page == undefined || +page < 1)
+      return res
+        .status(400)
+        .json({ message: "page param is required with at leats 1" });
+
+    let paginatedContacts = ContactModel.paginatedContacts(userId, page);
+
+    if (sortBy) {
+      paginatedContacts = ContactModel.sortBy(paginatedContacts, sortBy);
+    }
+
+    paginatedContacts = await paginatedContacts;
+
+    res.status(200).json({ contacts: paginatedContacts });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -100,7 +111,9 @@ exports.deleteContact = async (req, res) => {
       const userAvatar = removedContact.avatars.original;
 
       if (userAvatar != originalAvatar) {
+        console.log("Deleteing avatar");
         const deleted = await fs.unlink(userAvatar);
+        console.log("Avatar has been deleted");
       }
 
       res
