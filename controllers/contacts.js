@@ -46,6 +46,7 @@ exports.createContact = async (req, res) => {
     // Resize avatar for medium size version
     const contact = new ContactModel(contactInfo);
     await contact.save();
+
     res.status(200).json({ contact });
   } catch (error) {
     res.status(500).json({ message: error.message || error });
@@ -79,6 +80,7 @@ exports.updateContact = async (req, res) => {
         contactInfo["avatars"] = {};
         contactInfo = await setAvatars(contactInfo, file);
       }
+
       const updatedContact = await ContactModel.findOneAndUpdate(
         id,
         { ...contactInfo },
@@ -86,6 +88,7 @@ exports.updateContact = async (req, res) => {
       )
         .select("_id avatars firstName lastName phone email")
         .exec();
+
       return res.status(200).json({ contact: updatedContact });
     } else {
       throw new Error("Invalid id");
@@ -102,18 +105,20 @@ exports.deleteContact = async (req, res) => {
     const validId = mongoose.Types.ObjectId.isValid(id);
     // Delete
     if (validId) {
+      await ContactModel;
+      const user = await ContactModel.findById(id);
       const removedContact = await ContactModel.findByIdAndDelete({
         _id: id
       }).orFail(new Error("No contact found"));
 
-      const originalAvatar =
+      const originalAvatarPath =
         "uploads/imgs/avatars/1559520000-o-labs-avatar.png";
-      const userAvatar = removedContact.avatars.original;
+      const userAvatarPath = removedContact.avatars.original;
 
-      if (userAvatar != originalAvatar) {
-        console.log("Deleteing avatar");
-        const deleted = await fs.unlink(userAvatar);
-        console.log("Avatar has been deleted");
+      if (userAvatarPath !== originalAvatarPath) {
+        const deleted = await fs.unlink(
+          path.join(__dirname, `../${userAvatarPath}`)
+        );
       }
 
       res
