@@ -127,10 +127,7 @@ describe("@Authentication", () => {
       .request(app)
       .get(`${apiUrls.verify}?token=${token}`)
       .end((err, res) => {
-        res.should.have.status(200);
-        res.should.be.json;
-        res.body.should.contains.property("message");
-        const message = res.body.message;
+        res.should.have.status(301);
         authController.verifyToken(token).then(async payload => {
           const user = await userModel.findById(payload.id);
           // isVerified falg has been changed

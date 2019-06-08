@@ -49,11 +49,11 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
 
     const token = user.generateToken();
+
     const data = {
+      id: user._id,
       username: user.username,
-      avatars: user.avatars,
       email: user.email,
-      phone: user.phone,
       isVerified: user.isVerified
     };
     res.status(200).json({ token, user: data });
@@ -66,18 +66,16 @@ exports.checkAuth = (req, res) => {
   const token =
     req.query.token || req.body.token || req.get("Authorization").split(" ")[1];
   if (!token) return res.status(401).json({ message: "Unuthorized" });
-  jwt.verify(token, "blackswan", (err, payload) => {
+  jwt.verify(token, "blackswan", async (err, payload) => {
     if (err) return res.status(401).json({ error: "Unuthorized" });
 
     req.userId = payload.id;
-    const data = {
-      username: user.username,
-      avatars: user.avatars,
-      email: user.email,
-      phone: user.phone,
-      isVerified: user.isVerified
-    };
-    return res.status(200).json({ message: "Authenticated!", user: data });
+
+    const user = await userController.findUserById(payload.id);
+
+    return res
+      .status(200)
+      .json({ message: "Authenticated!", isVerified: user.isVerified });
   });
 };
 
@@ -100,9 +98,7 @@ exports.verifyEmail = async (req, res) => {
     const token = req.query.token;
     const payload = await this.verifyToken(token);
     await userController.verifyAccount(payload.id);
-    res
-      .status(200)
-      .json({ message: "Your account has been activated successfully!" });
+    res.redirect(301, "http://localhost:4200/account/verify");
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
