@@ -6,37 +6,37 @@ const saltRounds = 10;
 const jwt = require("jsonwebtoken");
 
 //User schema definition
-let UserSchema = new Schema(
-  {
-    username: {
-      type: String,
-      required: [true, "you should enter a username"]
-    },
-    email: {
-      type: String,
-      validate: {
-        validator: function(v) {
-          return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/.test(v);
-        },
-        message: props => `${props.value} is not a valid email!`
+  let UserSchema = new Schema(
+    {
+      username: {
+        type: String,
+        required: [true, "you should enter a username"]
       },
-      required: [true, "you should enter your email"]
+      email: {
+        type: String,
+        validate: {
+          validator: function(v) {
+            return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/.test(v);
+          },
+          message: props => `${props.value} is not a valid email!`
+        },
+        required: [true, "you should enter your email"]
+      },
+      password: {
+        type: String,
+        trim: true,
+        required: true
+      },
+      isVerified: {
+        type: Boolean,
+        default: false
+      },
+      createdAt: { type: Date, default: Date.now }
     },
-    password: {
-      type: String,
-      trim: true,
-      required: true
-    },
-    isVerified: {
-      type: Boolean,
-      default: false
-    },
-    createdAt: { type: Date, default: Date.now }
-  },
-  {
-    versionKey: false
-  }
-);
+    {
+      versionKey: false
+    }
+  );
 
 // Hash password;
 UserSchema.methods.hashPassword = function(password) {

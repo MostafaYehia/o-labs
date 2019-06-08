@@ -19,17 +19,16 @@ exports.signup = async (req, res) => {
         .status(409)
         .json({ message: "This email has been already used" });
 
-    const newUser = new userModel({ username, email, password });
-    await newUser.save();
+    const user = new userModel({ username, email, password });
+    await user.save();
 
-    const token = newUser.generateToken();
-    const mailInfo = await emailController.sendVerificationEmail(
-      token,
-      newUser
-    );
+    const token = user.generateToken();
+    const mailInfo = await emailController.sendVerificationEmail(token, user);
     res.status(200).json({
       message:
-        "Account has been created successfully!, check your email and activate your account"
+        "Account has been created successfully!, check your email and activate your account",
+      token,
+      user
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -50,7 +49,14 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
 
     const token = user.generateToken();
-    res.status(200).json({ token });
+    const data = {
+      username: user.username,
+      avatars: user.avatars,
+      email: user.email,
+      phone: user.phone,
+      isVerified: user.isVerified
+    };
+    res.status(200).json({ token, user: data });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -64,7 +70,14 @@ exports.checkAuth = (req, res) => {
     if (err) return res.status(401).json({ error: "Unuthorized" });
 
     req.userId = payload.id;
-    return res.status(200).json({ message: "Authenticated!" });
+    const data = {
+      username: user.username,
+      avatars: user.avatars,
+      email: user.email,
+      phone: user.phone,
+      isVerified: user.isVerified
+    };
+    return res.status(200).json({ message: "Authenticated!", user: data });
   });
 };
 
