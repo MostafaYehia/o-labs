@@ -10,22 +10,18 @@ exports.getPaginatedContacts = async (req, res) => {
   try {
     // Get all contacts
     const { userId } = req;
-    const { page } = req.query;
+    const page = req.query.page || 1;
 
-    if (page == undefined || +page < 1)
-      return res
-        .status(400)
-        .json({ message: "page param is required with at leats 1" });
+    let paginatedContacts = await ContactModel.paginatedContacts(userId, page);
 
-    let paginatedContacts = ContactModel.paginatedContacts(userId, page);
-
-    paginatedContacts = await paginatedContacts;
-
-    paginatedContacts = paginatedContacts.map(contact => ({
-      ...contact,
+    let contacts = paginatedContacts.map(contact => ({
+      ...contact._doc,
       id: contact._id
     }));
-    res.status(200).json({ contacts: paginatedContacts });
+
+    let totalPages = await getTotalPages();
+
+    res.status(200).json({ contacts, totalPages });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -121,9 +117,14 @@ exports.deleteContact = async (req, res) => {
         );
       }
 
+      let totalPages = await getTotalPages();
+
       res
         .status(200)
-        .json({ message: "Contact has been deleted successfully!" });
+        .json({
+          message: "Contact has been deleted successfully!",
+          totalPages
+        });
     } else {
       throw new Error("Invalid id");
     }
@@ -159,4 +160,9 @@ function setAvatars(doc, file) {
       reject(error);
     }
   });
+}
+
+async function getTotalPages() {
+  let totalDocs = await ContactModel.countDocuments();
+  return Math.ceil(totalDocs / 10);
 }
