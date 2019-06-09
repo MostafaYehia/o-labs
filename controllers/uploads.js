@@ -9,8 +9,8 @@ exports.configFileStorage = (fieldName, folderPath, fileTypes) => {
       const ext = file.mimetype.split("/")[1];
       const { id } = req.params;
 
-      if (id) cb(null, `${id}.${ext}`);
-      else cb(null, `${Date.now()}.${ext}`);
+      console.log("With this name: ", `${id}.${ext}` )
+      cb(null, `${id}.${ext}`);
     }
   });
 

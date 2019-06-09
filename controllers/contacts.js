@@ -12,7 +12,10 @@ exports.getPaginatedContacts = async (req, res) => {
     const { userId } = req;
     const page = req.query.page || 1;
 
-    let paginatedContacts = await ContactModel.paginatedContacts(userId, page).exec();
+    let paginatedContacts = await ContactModel.paginatedContacts(
+      userId,
+      page
+    ).exec();
 
     let contacts = paginatedContacts.map(contact => ({
       ...contact._doc,
@@ -43,7 +46,11 @@ exports.createContact = async (req, res) => {
     const contact = new ContactModel(contactInfo);
     await contact.save();
 
-    res.status(200).json({ contact });
+    let totalPages = await getTotalPages();
+
+    const data = { ...contact._doc, id: contact._id };
+
+    res.status(200).json({ contact: data, totalPages });
   } catch (error) {
     res.status(500).json({ message: error.message || error });
   }
@@ -57,7 +64,9 @@ exports.getContact = async (req, res) => {
       "-countryCode -nationalFormat -internationalFormat"
     ).orFail(new Error("No contact found"));
 
-    res.status(200).json({ contact });
+    const data = { ...contact._doc, id: contact._id };
+
+    res.status(200).json({ contact: data });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -66,26 +75,34 @@ exports.getContact = async (req, res) => {
 exports.updateContact = async (req, res) => {
   try {
     const { id } = req.params;
+
     const { file } = req;
 
     const validId = mongoose.Types.ObjectId.isValid(id);
 
     if (validId) {
-      let contactInfo = { ...req.body, id };
+      let contactInfo = { ...req.body, avatar: undefined };
       if (file) {
         contactInfo["avatars"] = {};
-        contactInfo = await setAvatars(contactInfo, file);
+        contactInfo = await setAvatars(contactInfo, id, file);
       }
-
-      const updatedContact = await ContactModel.findOneAndUpdate(
+      
+      const updatedContact = await ContactModel.findByIdAndUpdate(
         id,
-        { ...contactInfo },
-        { new: true, runValidators: true, useFindAndModify: false }
-      )
+        {
+          $set: { ...contactInfo }
+        },
+        {
+          new: true,
+          runValidators: true,
+          useFindAndModify: false
+        })
         .select("_id avatars firstName lastName phone email")
         .exec();
 
-      return res.status(200).json({ contact: updatedContact });
+      const data = { ...updatedContact._doc, id: updatedContact._id };
+
+      return res.status(200).json({ contact: data });
     } else {
       throw new Error("Invalid id");
     }
@@ -131,7 +148,7 @@ exports.deleteContact = async (req, res) => {
   }
 };
 
-function setAvatars(doc, file) {
+function setAvatars(doc, id, file) {
   return new Promise(async (resolve, reject) => {
     const sizes = [
       {
@@ -147,7 +164,7 @@ function setAvatars(doc, file) {
       doc["avatars"].original = file.path;
       for (const size of sizes) {
         doc["avatars"][size.type] = await imagesController.resize(
-          doc.id,
+          id,
           file.path,
           size.width,
           size.type
