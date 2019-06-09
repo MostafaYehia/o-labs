@@ -7,6 +7,10 @@ const logger = require("morgan");
 const mongoose = require("mongoose");
 const config = require("config");
 
+const compression = require('compression')
+const helmet = require('helmet')
+
+
 // load enviroment variables from .env file
 require("dotenv").config();
 
@@ -25,6 +29,8 @@ if (config.util.getEnv("NODE_ENV") !== "test") {
   app.use(logger("dev"));
 }
 
+app.use(helmet())
+app.use(compression())
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
