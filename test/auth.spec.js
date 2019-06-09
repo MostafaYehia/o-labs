@@ -127,15 +127,10 @@ describe("@Authentication", () => {
       .request(app)
       .get(`${apiUrls.verify}?token=${token}`)
       .end((err, res) => {
-        res.should.have.status(301);
         authController.verifyToken(token).then(async payload => {
           const user = await userModel.findById(payload.id);
           // isVerified falg has been changed
           expect(user.isVerified).to.equal(true);
-          expect(message).to.equal(
-            "Your account has been activated successfully!"
-          );
-
           done();
         });
       });

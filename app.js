@@ -1,6 +1,3 @@
-process.env.NODE_ENV = "test";
-
-
 const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
@@ -60,8 +57,6 @@ async function startDB() {
     await mongoose.connect(`${host}:${port}/${dbName}`, {
       useNewUrlParser: true
     });
-    console.log("dbName: ",  dbName)
-    console.log("Connected to mongodb successfully!");
   } catch (error) {
     console.log(error);
   }

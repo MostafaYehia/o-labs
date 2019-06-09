@@ -1,4 +1,5 @@
 const multer = require("multer");
+const path = require('path')
 
 exports.configFileStorage = (fieldName, folderPath, fileTypes) => {
   const storage = multer.diskStorage({

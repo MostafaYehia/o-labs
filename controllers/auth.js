@@ -82,6 +82,7 @@ exports.checkAuth = (req, res) => {
 exports.sendVerification = async (req, res) => {
   try {
     const token = req.body.token;
+
     const payload = await this.verifyToken(token);
     const user = await userController.findUserById(payload.id);
     emailController.sendVerificationEmail(token, user);
@@ -98,6 +99,7 @@ exports.verifyEmail = async (req, res) => {
     const token = req.query.token;
     const payload = await this.verifyToken(token);
     await userController.verifyAccount(payload.id);
+    
     res.redirect(301, "http://localhost:4200/account/verify");
   } catch (error) {
     res.status(401).json({ message: error.message });
