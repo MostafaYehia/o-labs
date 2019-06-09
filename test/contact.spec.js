@@ -65,7 +65,6 @@ describe("@Contacts", () => {
         res.should.be.json;
         res.body.should.have.property("contacts");
         res.body.contacts.should.be.a("array");
-
         done();
       });
   });
