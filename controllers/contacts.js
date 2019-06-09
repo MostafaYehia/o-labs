@@ -12,7 +12,7 @@ exports.getPaginatedContacts = async (req, res) => {
     const { userId } = req;
     const page = req.query.page || 1;
 
-    let paginatedContacts = await ContactModel.paginatedContacts(userId, page);
+    let paginatedContacts = await ContactModel.paginatedContacts(userId, page).exec();
 
     let contacts = paginatedContacts.map(contact => ({
       ...contact._doc,
@@ -119,12 +119,10 @@ exports.deleteContact = async (req, res) => {
 
       let totalPages = await getTotalPages();
 
-      res
-        .status(200)
-        .json({
-          message: "Contact has been deleted successfully!",
-          totalPages
-        });
+      res.status(200).json({
+        message: "Contact has been deleted successfully!",
+        totalPages
+      });
     } else {
       throw new Error("Invalid id");
     }
